@@ -1,0 +1,13 @@
+[Unit]
+Description=Serveo Tunnel to Hermes API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Restart=always
+RestartSec=5
+ExecStart=/usr/bin/ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8642 -N serveo.net
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+# Hermes Agent Docker 部署参考
+
+## 基础部署
+```bash
+sudo docker run -d \
+  --name hermes \
+  --restart unless-stopped \
+  -p 8642:8000 \
+  -e OPENROUTER_API_KEY=sk-or-v1-xxx \
+  -e API_SERVER_KEY=自定义密钥 \
+  -e HOST=0.0.0.0 \
+  -v hermes-data:/opt/data \
+  nousresearch/hermes-agent
+```
+
+## 查看日志
+```bash
+sudo docker logs hermes --tail 100 -f
+```
+
+## 更新容器
+```bash
+sudo docker stop hermes
+sudo docker rm hermes
+sudo docker pull nousresearch/hermes-agent
+# 然后重新运行上面的 docker run 命令
+```
+
+## 环境变量说明
+| 变量 | 必填 | 说明 |
+|------|------|------|
+| OPENROUTER_API_KEY | 是 | OpenRouter API Key，用于调用 AI 模型 |
+| API_SERVER_KEY | 是 | 本地 API 认证密钥，建议自定义 |
+| HOST | 否 | 监听地址，默认 0.0.0.0 |
+| PORT | 否 | 监听端口，内部端口 8000 |

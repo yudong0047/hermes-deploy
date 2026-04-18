@@ -1,0 +1,33 @@
+# 临时文件和脚本
+*.ps1
+*.bat
+*.py
+!simple_proxy2.py
+server*.py
+check_*.py
+deploy_*.py
+diag_*.ps1
+build_*.sh
+cf_*.sh
+change_model*.py
+combined_server.py
+restart_proxy.sh
+check_gateway.py
+check_headers.ps1
+check_hermes*.ps1
+check_invok.ps1
+check_serveo*.py
+debug_serveo*.py
+test_*.sh
+test_*.py
+_repo_payload.json
+
+# 运维脚本例外（! 必须放在所有排除规则之后）
+!hermes-deploy/scripts/*.sh
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Skills internal metadata (not part of the project)
+.workbuddy/
