@@ -3,7 +3,7 @@ name: hermes-deploy
 description: >
   腾讯云 Hermes Agent 部署与管理技能。触发词：「部署 Hermes」「腾讯云部署」「服务器部署」
   「Hermes Agent」「cloudflared」「外网访问」「聊天界面」「修复 Hermes」
-  「Hermes 打不开」「Hermes 连接失败」「重启 Hermes」。涵盖 SSH 连接、systemd 服务、
+  「Hermes 打不开」「Hermes 连接失败」「重启 Hermes」「官方面板」「管理后台」「Web UI」「Hermes v0.10」。涵盖 SSH 连接、systemd 服务、
   Docker 容器、cloudflared 隧道、聊天界面问题排查和 API 调试。
 ---
 
@@ -75,7 +75,22 @@ mihomo 代理 (127.0.0.1:7890/7891)
 
 ---
 
-## 五、聊天界面
+## 五、两个访问入口
+
+### 入口 1 — 轻量聊天界面（推荐日常使用）
+- 地址：`https://barn-rivers-compare-works.trycloudflare.com`
+- 特点：简单直接，快速对话，支持 Markdown，Shift+Enter 换行
+
+### 入口 2 — 官方管理面板（功能完整）
+- 地址：`https://society-wishing-differently-titans.trycloudflare.com`
+- 包含页面：Status、Config、Env、Logs、Sessions、Analytics、Cron、Skills
+- 启动方式：`cd /home/ubuntu/hermes-local/web && npm run dev`
+
+⚠️ 两个地址都是临时的，服务器重启后需重新获取（见运维脚本 get_url.sh）。
+
+---
+
+### 5.1 轻量聊天界面
 
 **当前访问地址**（重启后会变）：
 ```
@@ -115,6 +130,25 @@ ssh hermes-server "bash /tmp/check_status.sh"
 
 ### 6.4 test_api.sh — API 功能测试
 测试健康检查、模型列表、聊天功能三重验证。
+
+### 6.5 官方管理面板（v0.10.0）
+源码路径：`/home/ubuntu/hermes-local/web/`（Vite + React + Tailwind v4）
+
+**技术栈**：React 19 + Vite 7 + Tailwind CSS v4 + Lucide 图标 + React Router v7
+
+**包含页面**：Status（状态）、Config（配置）、Env（环境变量）、Logs（日志）、
+Sessions（会话历史）、Analytics（使用分析）、Cron（定时任务）、Skills（技能管理）
+
+**启动**：
+```bash
+cd /home/ubuntu/hermes-local/web && npm run dev
+# 监听 0.0.0.0:5173，/api 代理到 http://127.0.0.1:9119
+```
+
+**隧道**：
+```bash
+cloudflared tunnel --url http://localhost:5173
+```
 
 ---
 
