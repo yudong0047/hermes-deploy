@@ -158,31 +158,38 @@ powershell -NoProfile -Command ^
 "if($c.Count -gt 0){ $exe=$c[0].FullName; Write-Host ('       启动: '+$exe); Start-Process $exe; Start-Sleep -Seconds 12; $a=Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'dsh|harness|deepseek' }; if($a){ Write-Host '       进程已起来，DSH 正在运行' } else { Write-Host '       未检测到进程，请看日志' } } else { Write-Host '       未找到 DSH 可执行文件' }"
 echo.
 
-echo [6/6] 生成报告并回传...
-powershell -NoProfile -Command ^
-"$t=[IO.File]::ReadAllText((Join-Path (Get-Location) 'dsh_diag_output.txt'));" ^
-"$f=[IO.File]::ReadAllText((Join-Path (Get-Location) 'dsh_fix_output.txt'));" ^
-"$info='HOST: '+(hostname)+[char]10+'USER: '+(whoami)+[char]10+'CWD: '+(Get-Location)+[char]10+'PS: '+$PSVersionTable.PSVersion;" ^
-"$q=[char]96; $fence=$q+$q+$q;" ^
-"$md='# DSH-Desktop 启动故障全自动修复实录'+[char]10+[char]10+'## 一、执行位置确认'+[char]10+'```'+[char]10+$info+[char]10+'```'+[char]10+[char]10+'## 二、诊断原始输出'+[char]10+'```'+[char]10+$t+[char]10+'```'+[char]10+[char]10+'## 三、修复输出'+[char]10+'```'+[char]10+$f+[char]10+'```'+[char]10+[char]10+'## 四、根因判定'+[char]10+'（依据上方日志判断）'+[char]10;" ^
-"$rp=Join-Path (Get-Location) 'DSH-Desktop诊断报告.md';" ^
-"[IO.File]::WriteAllText($rp,$md,(New-Object Text.UTF8Encoding $true));" ^
-"Write-Host '       报告已生成: DSH-Desktop诊断报告.md';"
+echo [6/6] 生成报告、落桌面、复制到剪贴板...
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+"$dir='%HERE%';" ^
+"$d=Join-Path $dir 'dsh_diag_output.txt';" ^
+"$f=Join-Path $dir 'dsh_fix_output.txt';" ^
+"$txt=@();" ^
+"$txt+='HOST: '+(hostname); $txt+='USER: '+(whoami); $txt+='PS: '+$PSVersionTable.PSVersion; $txt+='';" ^
+"$txt+='=== 诊断输出 ==='; if(Test-Path $d){ $txt+=(Get-Content -Raw $d) } else { $txt+='(未找到)' };" ^
+"$txt+=''; $txt+='=== 修复输出 ==='; if(Test-Path $f){ $txt+=(Get-Content -Raw $f) } else { $txt+='(未找到)' };" ^
+"$rpt=($txt -join [char]10);" ^
+"$desk=Join-Path $env:USERPROFILE 'Desktop'; if(-not (Test-Path $desk)){ $desk=$env:USERPROFILE };" ^
+"$rp=Join-Path $desk 'DSH-Desktop诊断报告.txt';" ^
+"[IO.File]::WriteAllText($rp,$rpt,(New-Object Text.UTF8Encoding $true));" ^
+"Write-Host ('       报告已保存到桌面: DSH-Desktop诊断报告.txt');" ^
+"try { Set-Clipboard -Value $rpt; Write-Host '       报告全文已复制到剪贴板（回到聊天框 Ctrl+V 即可发我）' } catch { Write-Host ('       剪贴板写入失败: '+$_.Exception.Message) };" ^
+"try { Start-Process notepad.exe -ArgumentList ('"'+$rp+'"') } catch { }"
 
 echo.
-echo       上传报告到回传服务（失败也不影响修复结果）...
-powershell -NoProfile -Command ^
- "$c=Get-Content -Raw (Join-Path (Get-Location) 'DSH-Desktop诊断报告.md');" ^
- "try { $r=Invoke-RestMethod -Method Post -Uri 'https://paste.rs' -Body ([Text.Encoding]::UTF8.GetBytes($c)) -ContentType 'text/plain' -TimeoutSec 25; Write-Host ('       回传地址: https://paste.rs' + $r) } catch { Write-Host ('       回传失败（不影响本地修复）: ' + $_.Exception.Message) }"
+echo       额外备份报告到 paste.rs（失败不影响修复结果）...
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+"$c=Get-Content -Raw (Join-Path '%HERE%' 'dsh_diag_output.txt') -ErrorAction SilentlyContinue;" ^
+"try { $r=Invoke-RestMethod -Method Post -Uri 'https://paste.rs' -Body ([Text.Encoding]::UTF8.GetBytes($c)) -ContentType 'text/plain' -TimeoutSec 20; Write-Host ('       回传地址: https://paste.rs' + $r) } catch { Write-Host ('       回传失败（不影响本地修复）: ' + $_.Exception.Message) }"
 
 echo.
 echo ============================================================
 echo   全部完成！
 echo.
-echo   报告文件: DSH-Desktop诊断报告.md
-echo   原始日志: dsh_diag_output.txt / dsh_fix_output.txt
+eecho   报告文件: 桌面\DSH-Desktop诊断报告.txt
+echo   原始日志: %HERE%\dsh_diag_output.txt / dsh_fix_output.txt
 echo   数据备份: %%TEMP%%\dsh-backup-*.zip
 echo.
-echo   如果 DSH 还是打不开，把 dsh_diag_output.txt 的内容发给我。
+echo   >>> 下一步：回到聊天窗口，按 Ctrl+V 粘贴（报告已在剪贴板），直接发给我。
+echo   >>> 如果 DSH 还是打不开，也把同样内容发我。
 echo ============================================================
 pause
